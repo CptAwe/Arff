@@ -20,8 +20,9 @@ Usage:
                     <dict that specifies data types (eg {
                                                             "ids" : int, 
                                                             "scores":numpy.dtype("float64"),
-                                                            "date" : np.dtype("datetime64[ns]")
-                                                            "valid" : [True, False]
+                                                            "date" : np.dtype("datetime64[ns]"),
+                                                            "valid" : [True, False],
+                                                            "num" : [1, 2, 3] 
                                                         }
                                                      )>,
                     <values to count as missing info (list, eg ["null", 0])>
@@ -118,7 +119,7 @@ class Arff:
         if (not np.isin(correct_values, proposed_values).all()) and \
                 (not np.isin(proposed_values, correct_values).all()):
             raise ValueError('''Inconsistency between proposed and actual values of %s'''%(name))
-        return str(list(correct_values)).strip("[]()")
+        return str(list(proposed_values)).strip("[]()")
 
     def __createAttributes(self, specific_formats):
         # Each column name must be in a format like this:
@@ -184,6 +185,40 @@ class Arff:
 
         self._content_df.columns = changed_names
 
+    def __createarff(self):
+        total_rows = len(self._content_df)
+        for i in range(total_rows):
+            print("\rCreating arff row %s out of %s"%(i+1, total_rows), end="")
+            row = self._content_df.loc[i, :].values.astype(str)
+            self.__adddata(row)
+        print(end="")
+
+    def __createsparsearff(self):
+        total_rows = len(self._content_df)
+        for i in range(total_rows):
+            print("\rCreating sparse arff row %s out of %s"%(i+1, total_rows), end="")
+            # Add a column in the begging to fix the problem of sparse arff files
+            # see more here: https://www.cs.waikato.ac.nz/ml/weka/arff.html
+
+            row = self._content_df.iloc[[i], :].copy()
+            row.insert(loc=0, column=self._dummyname, value=self._dummyvalue)
+
+            row_str = []
+            for index, col in enumerate(row):
+                try:
+                    if row[col].values[0] in self._sparsevalue:
+                        continue
+                except Exception as e:
+                    print(e)
+                    raise ValueError("The above problem was encountered. Check if your attributes are unique.")
+                row_str.append("%s %s" % (index, row[col].values[0]))
+
+            # row = row.values.astype(str)[0]
+            # print(row)
+
+            self.__adddata(row_str, True)
+        print(end="")
+
     def __fillContent(self, sparse):
         """
         fills the __content_str with the lines of the arff file
@@ -212,28 +247,11 @@ class Arff:
         for val in self._extra_missing:
             self._content_df = self._content_df.replace(val, self._missingvalue)
 
+        print("Creating arff file...")
         if sparse:
-            for i in range(len(self._content_df)):
-                # Add a column in the begging to fix the problem of sparse arff files
-                # see more here: https://www.cs.waikato.ac.nz/ml/weka/arff.html
-
-                row = self._content_df.iloc[[i]].copy()
-                row.insert(loc=0, column=self._dummyname, value=self._dummyvalue)
-
-                row_str = []
-                for index, col in enumerate(row):
-                    if row[col].values[0] in self._sparsevalue:
-                        continue
-                    row_str.append("%s %s"%(index, row[col].values[0]))
-
-                # row = row.values.astype(str)[0]
-                # print(row)
-
-                self.__adddata(row_str, sparse)
+            self.__createsparsearff()
         else:
-            for i in range(len(self._content_df)):
-                row = self._content_df.loc[i, :].values.astype(str)
-                self.__adddata(row)
+            self.__createarff()
 
     def write(self, save_dir_tmp, sparse=False):
         """
