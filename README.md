@@ -36,3 +36,6 @@ A simple library to convert a pandas DataFrame to an arff file (sparse or not)
                 )
     arff.write(<save directory>, <save it as sparse file or not (bool: True -> sparse, False -> normal)>)
 ```
+
+## Future Changes:
+* Even for small DataFrames (*2k rows*), making a sparse arff file takes a lot of time. It is best to make it faster some day.
