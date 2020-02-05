@@ -50,6 +50,12 @@ class Arff:
         self._attribute = "@ATTRIBUTE "
         self._data = "@DATA"
         self._missingvalue = "?"
+        self._invalid_attribute_symbol = {
+            " " : "_",
+            "," : "_",
+            "/" : "_",
+            "-" : ""
+        }
 
         # Extra info
         self._extra_missing = extra_missing
@@ -100,7 +106,7 @@ class Arff:
         self._content_str.append(self._relation)
 
     def __addattribute(self, attribute):
-        self._content_str.append(attribute)
+        self._content_str.append(self._attribute + attribute)
 
     def __adddatadeclaration(self):
         self._content_str.append(self._data)
@@ -120,6 +126,14 @@ class Arff:
                 (not np.isin(proposed_values, correct_values).all()):
             raise ValueError('''Inconsistency between proposed and actual values of %s'''%(name))
         return str(list(proposed_values)).strip("[]()")
+
+    def __parseattributename(self, original_name):
+        name = original_name
+        for i in self._invalid_attribute_symbol:
+            name = name.replace(i, self._invalid_attribute_symbol[i])
+        name = name + "@"
+
+        return name
 
     def __createAttributes(self, specific_formats):
         # Each column name must be in a format like this:
@@ -152,8 +166,7 @@ class Arff:
                     self._content_df[original_name] = self._content_df[original_name].astype(correct_type)
                 original_datatype = correct_type
 
-            name = original_name.replace(" ", "_")  # Replace any spaces in the column names with "_"
-            name = name + "@"
+            name = self.__parseattributename(original_name)
 
             choose = ""
             content = ""
@@ -191,7 +204,7 @@ class Arff:
             print("\rCreating arff row %s out of %s"%(i+1, total_rows), end="")
             row = self._content_df.loc[i, :].values.astype(str)
             self.__adddata(row)
-        print(end="")
+        print("\n", end="")
 
     def __createsparsearff(self):
         total_rows = len(self._content_df)
@@ -217,7 +230,7 @@ class Arff:
             # print(row)
 
             self.__adddata(row_str, True)
-        print(end="")
+        print("\n", end="")
 
     def __fillContent(self, sparse):
         """
