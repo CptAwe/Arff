@@ -34,6 +34,12 @@ import pandas as pd
 import numpy as np
 import dateinfer
 
+# from Arffparts.Attribute import Attribute
+# from Arffparts.Relation import Relation
+# from Arffparts.Data import Data
+
+# attr = Attribute("a", None)
+
 
 def getdateformat(dates: list):
     dates = list(dates.astype(str))
