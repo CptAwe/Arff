@@ -7,7 +7,7 @@ A simple library to convert a pandas DataFrame to an arff file (sparse or not)
 ## Dependencies:
 * pandas
 * numpy
-* dateinfer
+* dateinfer (use the actively maintained [pydateinfer](https://github.com/wdm0006/dateinfer))
 
 ## Features:
 * It supports all arff datatypes:
