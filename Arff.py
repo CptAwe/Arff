@@ -204,25 +204,28 @@ class Arff:
     def __createarff(self):
         total_rows = len(self._content_df)
         for i in range(total_rows):
-            print("\rCreating arff row %s out of %s"%(i+1, total_rows), end="")
+            if i%10 == 0:
+                print("\rCreating arff row %s out of %s"%(i+1, total_rows), end="")
             row = self._content_df.loc[i, :].values.astype(str)
             self.__adddata(row)
         print("\n", end="")
 
-    def __createsparsearff(self):
+    def __createsparsearff(self, add_dummy_col=False):
         print()
 
         original_columns = self._content_df.columns
 
-        # Add a column in the begging to fix the problem of sparse arff files
-        # see more here: https://www.cs.waikato.ac.nz/ml/weka/arff.html
-        self._content_df[self._dummyname] = self._dummyvalue
-        original_columns = np.append([self._dummyname], original_columns)
-        self._content_df = self._content_df[original_columns]
+        if add_dummy_col:
+            # Add a column in the begging to fix the problem of sparse arff files
+            # see more here: https://www.cs.waikato.ac.nz/ml/weka/arff.html
+            self._content_df[self._dummyname] = self._dummyvalue
+            original_columns = np.append([self._dummyname], original_columns)
+            self._content_df = self._content_df[original_columns]
 
         total_rows = len(self._content_df)
         for i in range(total_rows):
-            print("\rCreating sparse arff row %s out of %s"%(i+1, total_rows), end="")
+            if i%10 == 0:
+                print("\rCreating sparse arff row %s out of %s"%(i+10, total_rows), end="")
 
             row = self._content_df.iloc[[i], :].copy()
 
