@@ -245,7 +245,7 @@ class Arff:
             self.__adddata(row_str, True)
         print("\n", end="")
 
-    def __fillContent(self, sparse):
+    def __fillContent(self, sparse, add_dummy_col = False):
         """
         fills the __content_str with the lines of the arff file
         :param: sparse:
@@ -257,7 +257,7 @@ class Arff:
         self.__addnewline()
 
         # Create the Attributes
-        if sparse:
+        if sparse and add_dummy_col:
             self.__addattribute(self._dummyname + " " + self._dummytype)
 
         for col in self._content_df.columns:
