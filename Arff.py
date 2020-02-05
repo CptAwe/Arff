@@ -50,6 +50,7 @@ class Arff:
         self._attribute = "@ATTRIBUTE "
         self._data = "@DATA"
         self._missingvalue = "?"
+        self._comment = "%"
         self._invalid_attribute_symbol = {
             " " : "_",
             "," : "_",
@@ -67,8 +68,6 @@ class Arff:
         self._dummyname = "dummy"
         self._dummytype = "STRING"
         self._dummyvalue = "dummy"
-
-
 
         self._attr_types = {
             "number": {
@@ -117,6 +116,10 @@ class Arff:
             data = self._sparceleft + data
             data = data + self._sparseright
         self._content_str.append(data)
+
+    def __addendoffile(self):
+        for i in range(3):
+            self._content_str.append(self._comment)
 
     def __makeattributenominal(self, name, proposed_values):
         correct_values = np.unique(self._content_df[name])
@@ -207,14 +210,21 @@ class Arff:
         print("\n", end="")
 
     def __createsparsearff(self):
+        print()
+
+        original_columns = self._content_df.columns
+
+        # Add a column in the begging to fix the problem of sparse arff files
+        # see more here: https://www.cs.waikato.ac.nz/ml/weka/arff.html
+        self._content_df[self._dummyname] = self._dummyvalue
+        original_columns = np.append([self._dummyname], original_columns)
+        self._content_df = self._content_df[original_columns]
+
         total_rows = len(self._content_df)
         for i in range(total_rows):
             print("\rCreating sparse arff row %s out of %s"%(i+1, total_rows), end="")
-            # Add a column in the begging to fix the problem of sparse arff files
-            # see more here: https://www.cs.waikato.ac.nz/ml/weka/arff.html
 
             row = self._content_df.iloc[[i], :].copy()
-            row.insert(loc=0, column=self._dummyname, value=self._dummyvalue)
 
             row_str = []
             for index, col in enumerate(row):
@@ -265,6 +275,8 @@ class Arff:
             self.__createsparsearff()
         else:
             self.__createarff()
+
+        self.__addendoffile()
 
     def write(self, save_dir_tmp, sparse=False):
         """
